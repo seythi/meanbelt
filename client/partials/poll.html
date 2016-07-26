@@ -1,0 +1,10 @@
+<div ng-controller="voterController">
+	<a href="#/dashboard">Home</a>
+	<h4 ng-bind="title"></h4>
+	<table>
+		<thead><th>option</th><th>vote count</th><th>action</th></thead>
+		<tbody ng-repeat="option in options">
+		<td ng-bind="option.optname"></td><td ng-bind="option.vcount"></td><td><button ng-click="vote($index)">Vote!</button></td>
+		</tbody>
+	</table>
+</div>

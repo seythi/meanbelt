@@ -1,0 +1,6 @@
+bower_components
+node_modules
+helpers
+client/partials\ legacy
+client/static\ legacy
+client/*.html

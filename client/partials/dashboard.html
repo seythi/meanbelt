@@ -1,0 +1,11 @@
+<div ng-controller="dashController">
+	<a href="#/create">New Poll </a>  <a ng-click="logout()"> Log Out</a>
+	<h4>Current Polls</h4>
+	<input ng-model='search.title' placeholder="search"/>
+	<table>
+		<thead><th> name </th><th>Survey Question</th><th>Date Posted</th><th>action</th></thead>
+		<tbody ng-repeat="poll in polls | filter:search">
+		<td ng-bind="poll._poster.name"></td><td><a ng-href="#/poll/{{poll._id}}" ng-bind="poll.title"></a></td><td ng-bind="poll.createdAt | date:'short'"></td><td><button ng-if="poll._poster.name == name" ng-click="delpoll(poll._id)">Delete</button></td>
+		</tbody>
+	</table>
+</div>

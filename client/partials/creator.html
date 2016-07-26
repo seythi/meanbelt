@@ -1,0 +1,12 @@
+<div ng-controller="pollBuilderController">
+	question and options here <a href="#/dashboard">Cancel</a>
+	<p>question:<input ng-model="title" type='text' ></p>
+	<p>option 1:<input ng-model="o0" type='text'></p>
+	<p>option 2:<input ng-model="o1" type='text'></p>
+	<p>option 3:<input ng-model="o2" type='text'></p>
+	<p>option 4:<input ng-model="o3" type='text'></p>
+	<button ng-click="pose()">Pose Question</button>
+	<ul ng-if="err">
+	<li ng-repeat="error in err.errors"><span ng-bind="error.message"></span></li>
+	</ul>
+</div>

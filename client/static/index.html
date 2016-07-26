@@ -1,0 +1,137 @@
+<html ng-app='myApp'>
+  <head>
+    <!-- <script src='https://ajax.googleapis.com/ajax/libs/angularjs/1.3.5/angular.min.js'></script> -->
+    <!-- <link type="text/css" rel="stylesheet" href="/client/static/stylesheet.css"></link> -->
+    <script type ="text/javascript" src="/bower_components/angular/angular.js"></script>
+    <script type ="text/javascript" src="/bower_components/angular-route/angular-route.js"></script>
+    <script type='text/javascript'>
+      var aMod = angular.module('myApp', ['ngRoute']);
+      aMod.config(function ($routeProvider) {
+      $routeProvider
+        .when('/',{
+            templateUrl: 'client/partials/loginpart.html',
+        })
+        .when('/dashboard',{
+            templateUrl: 'client/partials/dashboard.html'
+        })
+        .when('/poll/:pID',{
+            templateUrl: 'client/partials/poll.html'
+        })
+        .when('/create',{
+            templateUrl: 'client/partials/creator.html'
+        })
+        .otherwise({
+          redirectTo: '/'
+        });
+      });
+
+
+      aMod.factory('userFactory', function($http){
+        var factory = {};
+        var name = "";
+        factory.login = function(uname, callback){
+          $http.post('/retuser', {name: uname} ).then(function success(res){if(res.data.name){name = res.data.name;} callback(res);}, function fail(res){callback(res)})
+        }
+        factory.gn = function(){return name;}
+        factory.lo = function(){name = null;}
+        return factory;
+      })
+      aMod.controller('loginController', ['$scope', '$location', 'userFactory', function ($scope, $location, userFactory){
+        $scope.login = function(){
+          userFactory.login($scope.uname, function(res){
+            var data = res.data
+            if(data.name){
+              $scope.name = data.name;
+              $location.path('/dashboard');
+            }
+            else{
+              $scope.error = data.err;
+            }
+          });
+        }
+      }])
+
+      aMod.factory('pollFactory', function($http){
+        var factory = {};
+        var allpolls = [];
+        var targpoll = {};
+        factory.populateDash = function(callback){ //res is either err or polls
+          $http.post('/populateDash', {}).then(function success(res){allpolls = res.data;callback(res);}, function fail(res){callback(res)})
+        }
+        factory.populateTarget = function(targID, callback){
+          $http.post('/populateTarg', {targ: targID}).then(function success(res){targpoll = res.data; callback(res);}, function fail(res){callback(res)})
+        }
+        factory.vote = function(vIndex, callback){
+          $http.post('/vote', {targ: targpoll._id, choice: vIndex}).then(function success(res){targpoll.choices[vIndex].vcount ++; callback(res);}, function fail(res){callback(res)})
+        }
+        factory.pose = function(name, title, o0, o1, o2, o3, callback)
+        {
+          $http.post('/pose', {name: name, title: title, o0: o0, o1: o1, o2: o2, o3: o3}).then(function success(res){callback(res);}, function fail(res){callback(res)})
+        }
+        factory.deletePoll = function(name, pID, callback){
+          console.log(pID);
+          $http.post('/delete', {targ: pID, name: name}).then(function success(res){callback(res);}, function fail(res){callback(res)})
+        }
+        return factory;
+      })
+      aMod.controller('dashController', ['$scope', '$location', 'userFactory', 'pollFactory', function ($scope, $location, userFactory, pollFactory){
+        if(!userFactory.gn())
+        {$location.path('/')}
+        else{
+          var name = userFactory.gn();
+          $scope.name = name;
+          $scope.flit = "";
+          pollFactory.populateDash(function(res){
+            $scope.polls = res.data;
+          })
+          $scope.delpoll = function(pID){
+            console.log('deleting')
+            console.log(pID)
+            pollFactory.deletePoll(name, pID, function(res){$scope.$apply})
+          }
+          $scope.selpoll = function(pID){
+            $location.path('/poll/' + pID);
+          }
+          $scope.logout = function(){
+            userFactory.lo();
+            $location.path('/');
+          }
+        }
+      }])
+      aMod.controller('voterController', ['$scope', '$location', '$routeParams', 'pollFactory', function ($scope, $location, $routeParams, pollFactory){
+          var targid = $routeParams.pID;
+          pollFactory.populateTarget(targid, function(res){
+            $scope.options = res.data.choices;
+            $scope.title = res.data.title;
+            console.log($scope);
+          })
+          $scope.vote = function(ind){
+            pollFactory.vote(ind, function(res){
+              $scope.$apply;
+            })
+          }
+      }])
+      aMod.controller('pollBuilderController', ['$scope', '$location', 'userFactory', 'pollFactory', function ($scope, $location, userFactory, pollFactory){
+        if(!userFactory.gn())
+        {$location.path('/')}
+        else{
+          $scope.pose = function(){
+            console.log('posing');
+            pollFactory.pose(userFactory.gn(), $scope.title, $scope.o0, $scope.o1, $scope.o2, $scope.o3, function(res){
+              if(res.data.success){
+                $location.path('/dashboard');
+              }
+              else{
+                $scope.err = res.data.err;
+                console.log(res.data);
+              }
+            })
+          }
+        }
+      }])
+    </script>
+  </head>
+<body>
+<div ng-view=""></div>
+</body>
+</html>
